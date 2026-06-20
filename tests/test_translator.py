@@ -16,6 +16,7 @@ import unittest
 # Make the project root importable when running from anywhere.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import optimizer  # noqa: E402
 import rule_engine  # noqa: E402
 import translator  # noqa: E402
 import validator  # noqa: E402
@@ -151,6 +152,61 @@ class TestValidator(unittest.TestCase):
     def test_azerbaijani_messages(self):
         issues = validator.check_sql("", "az")
         self.assertIn("boş", issues[0].lower())
+
+
+class TestOptimizer(unittest.TestCase):
+    def test_select_star(self):
+        out = optimizer.suggest("SELECT * FROM users WHERE id = 1;", "en")
+        self.assertTrue(any("SELECT *" in s for s in out))
+
+    def test_leading_wildcard(self):
+        out = optimizer.suggest("SELECT name FROM t WHERE name LIKE '%abc';", "en")
+        self.assertTrue(any("index" in s.lower() for s in out))
+
+    def test_function_on_column(self):
+        out = optimizer.suggest(
+            "SELECT id FROM t WHERE UPPER(name) = 'BOB';", "en")
+        self.assertTrue(any("function" in s.lower() for s in out))
+
+    def test_or_condition(self):
+        out = optimizer.suggest(
+            "SELECT id FROM t WHERE a = 1 OR a = 2;", "en")
+        self.assertTrue(any("OR" in s for s in out))
+
+    def test_not_in(self):
+        out = optimizer.suggest(
+            "SELECT id FROM t WHERE id NOT IN (1, 2, 3);", "en")
+        self.assertTrue(any("NOT EXISTS" in s for s in out))
+
+    def test_implicit_join(self):
+        out = optimizer.suggest(
+            "SELECT a.id FROM a, b WHERE a.id = b.id;", "en")
+        self.assertTrue(any("JOIN" in s for s in out))
+
+    def test_order_without_limit(self):
+        out = optimizer.suggest("SELECT name FROM t ORDER BY name;", "en")
+        self.assertTrue(any("LIMIT" in s for s in out))
+
+    def test_no_where(self):
+        out = optimizer.suggest("SELECT name FROM big_table;", "en")
+        self.assertTrue(any("whole table" in s.lower() for s in out))
+
+    def test_clean_query_few_suggestions(self):
+        # A targeted query with explicit columns, a WHERE filter, and a LIMIT
+        # should not trigger SELECT *, no-WHERE, or order-without-limit.
+        out = optimizer.suggest(
+            "SELECT id, name FROM users WHERE id = 5 LIMIT 1;", "en")
+        joined = " ".join(out)
+        self.assertNotIn("SELECT *", joined)
+        self.assertNotIn("whole table", joined.lower())
+
+    def test_azerbaijani(self):
+        out = optimizer.suggest("SELECT * FROM t WHERE id = 1;", "az")
+        self.assertTrue(any("sütun" in s.lower() for s in out))
+
+    def test_non_select_returns_empty(self):
+        out = optimizer.suggest("UPDATE t SET x = 1 WHERE id = 2;", "en")
+        self.assertEqual(out, [])
 
 
 if __name__ == "__main__":

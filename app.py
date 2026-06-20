@@ -12,6 +12,7 @@ detection and ``translator.translate`` for the explanation.
 from flask import Flask, render_template, request
 
 import ai_engine
+import optimizer
 import translator
 import validator
 
@@ -28,6 +29,7 @@ UI = {
         "engine_label": "Engine",
         "submit": "Translate",
         "issues_title": "Possible issues",
+        "suggest_title": "Optimization suggestions",
         "result_title": "Explanation",
         "ai_note": "AI engine active (ANTHROPIC_API_KEY found).",
         "rule_note": "Offline engine (set ANTHROPIC_API_KEY for AI explanations).",
@@ -42,6 +44,7 @@ UI = {
         "engine_label": "Motor",
         "submit": "Tərcümə et",
         "issues_title": "Mümkün problemlər",
+        "suggest_title": "Optimallaşdırma təklifləri",
         "result_title": "İzah",
         "ai_note": "AI motoru aktivdir (ANTHROPIC_API_KEY tapıldı).",
         "rule_note": "Offline motor (AI izahları üçün ANTHROPIC_API_KEY təyin edin).",
@@ -63,6 +66,7 @@ def index():
 
     query = ""
     issues = []
+    suggestions = []
     explanation = None
     error = None
 
@@ -72,6 +76,7 @@ def index():
             error = UI[lang]["empty_error"]
         else:
             issues = validator.check_sql(query, lang)
+            suggestions = optimizer.suggest(query, lang)
             explanation = translator.translate(query, lang=lang, engine=engine)
 
     return render_template(
@@ -82,6 +87,7 @@ def index():
         engines=ENGINES,
         query=query,
         issues=issues,
+        suggestions=suggestions,
         explanation=explanation,
         error=error,
         ai_available=ai_engine.is_available(),

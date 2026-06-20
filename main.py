@@ -11,10 +11,12 @@ import sys
 
 import sqlparse
 
+import optimizer
 import translator
 import validator
 
 _ISSUES_LABEL = {"en": "Possible issues:", "az": "Mümkün problemlər:"}
+_SUGGEST_LABEL = {"en": "Optimization suggestions:", "az": "Optimallaşdırma təklifləri:"}
 
 
 def _read_queries(args):
@@ -66,6 +68,11 @@ def build_parser():
         action="store_true",
         help="Skip the SQL error check (only show the explanation).",
     )
+    parser.add_argument(
+        "--no-optimize",
+        action="store_true",
+        help="Skip the optimization suggestions.",
+    )
     return parser
 
 
@@ -110,6 +117,15 @@ def main(argv=None):
 
         explanation = translator.translate(sql, lang=args.lang, engine=args.engine)
         print(explanation)
+
+        if not args.no_optimize:
+            suggestions = optimizer.suggest(sql, args.lang)
+            if suggestions:
+                print()
+                print(_SUGGEST_LABEL[args.lang])
+                for s in suggestions:
+                    print(f"  - {s}")
+
         if multiple and i < len(queries):
             print()
     return 0

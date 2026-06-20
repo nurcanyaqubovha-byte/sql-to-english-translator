@@ -47,6 +47,16 @@ class TestWebApp(unittest.TestCase):
         body = resp.data.decode("utf-8")
         self.assertIn("comma", body.lower())
 
+    def test_post_shows_optimization(self):
+        resp = self.client.post("/", data={
+            "query": "SELECT * FROM users;",
+            "lang": "en",
+            "engine": "rule",
+        })
+        body = resp.data.decode("utf-8")
+        self.assertIn("SELECT *", body)
+        self.assertIn("Optimization", body)
+
     def test_azerbaijani_page(self):
         resp = self.client.get("/?lang=az")
         body = resp.data.decode("utf-8")

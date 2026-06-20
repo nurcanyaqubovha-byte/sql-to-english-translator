@@ -61,6 +61,17 @@
       <p>{{ explanation }}</p>
     </div>
     {% endif %}
+
+    {% if suggestions %}
+    <div class="card suggest-card">
+      <h2>{{ ui.suggest_title }}</h2>
+      <ul>
+        {% for s in suggestions %}
+        <li>{{ s }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </main>
 </body>
 </html>

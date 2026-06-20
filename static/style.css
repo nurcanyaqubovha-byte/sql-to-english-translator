@@ -126,4 +126,8 @@ button:hover { filter: brightness(1.08); }
 .issues-card ul { margin: 0; padding-left: 1.2rem; }
 .issues-card li { margin-bottom: 0.3rem; }
 
+.suggest-card { border-left-color: var(--accent); }
+.suggest-card ul { margin: 0; padding-left: 1.2rem; }
+.suggest-card li { margin-bottom: 0.4rem; }
+
 .error-card { border-left-color: var(--error); color: var(--error); }

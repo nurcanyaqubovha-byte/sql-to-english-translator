@@ -11,6 +11,8 @@ available — it upgrades to a Claude-powered engine for richer explanations.
 - Explain SELECT, WHERE, ORDER BY, GROUP BY, HAVING, and JOIN clauses
 - **SQL error detection** — flags common mistakes (unbalanced parentheses,
   trailing commas, `= NULL`, typos) in clear language before translating
+- **Optimization suggestions** — points out performance anti-patterns
+  (`SELECT *`, leading `LIKE '%...'`, functions on columns, implicit joins, ...)
 - **Offline rule-based engine** — no API key, no internet required
 - **AI engine** — Anthropic Claude for complex queries (subqueries, etc.)
 - **Hybrid auto mode** — picks the AI engine when a key is set, otherwise rules
@@ -27,6 +29,7 @@ SQL terceme/
 ├── rule_engine.py          # Offline rule-based engine
 ├── ai_engine.py            # Claude API engine
 ├── validator.py            # SQL error detection
+├── optimizer.py            # Query optimization suggestions
 ├── templates/
 │   └── index.html          # Web page template
 ├── static/
@@ -101,6 +104,7 @@ python main.py --file examples/sample_queries.sql --engine rule
 | `-l`, `--lang` | `en`, `az` | `en` | Output language |
 | `-e`, `--engine` | `auto`, `ai`, `rule` | `auto` | Translation engine |
 | `--no-check` | flag | off | Skip the SQL error check |
+| `--no-optimize` | flag | off | Skip the optimization suggestions |
 
 ### Error detection
 
@@ -119,6 +123,25 @@ Show a and b, from t, where (x is greater than 1.
 ```
 
 Use `--no-check` to skip this step.
+
+### Optimization suggestions
+
+The tool also points out common performance anti-patterns:
+
+```bash
+python main.py "SELECT * FROM users WHERE name LIKE '%son' ORDER BY name;" --engine rule
+```
+
+```text
+Show all columns, from users, where name matches the pattern '%son', ordered by name.
+
+Optimization suggestions:
+  - Avoid SELECT * -- list only the columns you need...
+  - A LIKE pattern that starts with '%' cannot use an index...
+  - ORDER BY without LIMIT sorts the entire result...
+```
+
+Use `--no-optimize` to skip this step.
 
 ## Examples
 
@@ -181,7 +204,6 @@ python -m unittest discover -s tests
 
 ## Future Enhancements
 
-- Query optimization suggestions
 - Interactive learning mode
 
 ## Author
