@@ -12,6 +12,9 @@ import sys
 import sqlparse
 
 import translator
+import validator
+
+_ISSUES_LABEL = {"en": "Possible issues:", "az": "Mümkün problemlər:"}
 
 
 def _read_queries(args):
@@ -58,6 +61,11 @@ def build_parser():
         default="auto",
         help="Translation engine: 'auto' (default), 'ai', or 'rule'.",
     )
+    parser.add_argument(
+        "--no-check",
+        action="store_true",
+        help="Skip the SQL error check (only show the explanation).",
+    )
     return parser
 
 
@@ -87,11 +95,20 @@ def main(argv=None):
 
     multiple = len(queries) > 1
     for i, sql in enumerate(queries, start=1):
-        explanation = translator.translate(sql, lang=args.lang, engine=args.engine)
         if multiple:
             print(f"--- Query {i} ---")
             print(sql)
             print()
+
+        if not args.no_check:
+            issues = validator.check_sql(sql, args.lang)
+            if issues:
+                print(_ISSUES_LABEL[args.lang])
+                for issue in issues:
+                    print(f"  - {issue}")
+                print()
+
+        explanation = translator.translate(sql, lang=args.lang, engine=args.engine)
         print(explanation)
         if multiple and i < len(queries):
             print()

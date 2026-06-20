@@ -9,6 +9,8 @@ available — it upgrades to a Claude-powered engine for richer explanations.
 
 - Translate SQL queries into natural language (English and Azerbaijani)
 - Explain SELECT, WHERE, ORDER BY, GROUP BY, HAVING, and JOIN clauses
+- **SQL error detection** — flags common mistakes (unbalanced parentheses,
+  trailing commas, `= NULL`, typos) in clear language before translating
 - **Offline rule-based engine** — no API key, no internet required
 - **AI engine** — Anthropic Claude for complex queries (subqueries, etc.)
 - **Hybrid auto mode** — picks the AI engine when a key is set, otherwise rules
@@ -22,6 +24,7 @@ SQL terceme/
 ├── translator.py           # Engine selection (hybrid logic)
 ├── rule_engine.py          # Offline rule-based engine
 ├── ai_engine.py            # Claude API engine
+├── validator.py            # SQL error detection
 ├── prompts/
 │   ├── sql_prompt_en.txt
 │   └── sql_prompt_az.txt
@@ -90,6 +93,25 @@ python main.py --file examples/sample_queries.sql --engine rule
 | `-f`, `--file` | path | – | Read one or more statements from a file |
 | `-l`, `--lang` | `en`, `az` | `en` | Output language |
 | `-e`, `--engine` | `auto`, `ai`, `rule` | `auto` | Translation engine |
+| `--no-check` | flag | off | Skip the SQL error check |
+
+### Error detection
+
+Before translating, the tool checks for common mistakes and prints them:
+
+```bash
+python main.py "SELECT a, b, FROM t WHERE (x > 1;" --engine rule
+```
+
+```text
+Possible issues:
+  - Unbalanced parentheses: 1 '(' and 0 ')'.
+  - There is a comma right before FROM. Remove the trailing comma in the column list.
+
+Show a and b, from t, where (x is greater than 1.
+```
+
+Use `--no-check` to skip this step.
 
 ## Examples
 
@@ -139,7 +161,6 @@ python -m unittest discover -s tests
 
 ## Future Enhancements
 
-- SQL error detection
 - Query optimization suggestions
 - Web application interface
 - Interactive learning mode

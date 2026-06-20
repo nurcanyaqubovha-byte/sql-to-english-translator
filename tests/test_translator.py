@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import rule_engine  # noqa: E402
 import translator  # noqa: E402
+import validator  # noqa: E402
 
 
 class TestRuleEngineEnglish(unittest.TestCase):
@@ -101,6 +102,55 @@ class TestHybridSelection(unittest.TestCase):
     def test_invalid_lang_falls_back_to_en(self):
         out = translator.translate("SELECT * FROM t;", lang="xx", engine="rule")
         self.assertIn("all columns", out)
+
+
+class TestValidator(unittest.TestCase):
+    def test_valid_query_has_no_issues(self):
+        sql = "SELECT name FROM users WHERE age > 18;"
+        self.assertEqual(validator.check_sql(sql, "en"), [])
+
+    def test_empty(self):
+        issues = validator.check_sql("", "en")
+        self.assertEqual(len(issues), 1)
+        self.assertIn("empty", issues[0].lower())
+
+    def test_unbalanced_parentheses(self):
+        issues = validator.check_sql("SELECT * FROM t WHERE (a > 1;", "en")
+        self.assertTrue(any("parenthes" in m.lower() for m in issues))
+
+    def test_unbalanced_quote(self):
+        issues = validator.check_sql("SELECT * FROM t WHERE name = 'bob;", "en")
+        self.assertTrue(any("quote" in m.lower() for m in issues))
+
+    def test_trailing_comma_before_from(self):
+        issues = validator.check_sql("SELECT a, b, FROM t;", "en")
+        self.assertTrue(any("comma" in m.lower() for m in issues))
+
+    def test_equals_null(self):
+        issues = validator.check_sql("SELECT * FROM t WHERE x = NULL;", "en")
+        self.assertTrue(any("NULL" in m for m in issues))
+
+    def test_unknown_start(self):
+        issues = validator.check_sql("SELCT * FROM t;", "en")
+        self.assertTrue(any("keyword" in m.lower() for m in issues))
+
+    def test_select_without_from(self):
+        issues = validator.check_sql("SELECT name, age;", "en")
+        self.assertTrue(any("from" in m.lower() for m in issues))
+
+    def test_select_literal_no_false_positive(self):
+        # "SELECT 1" and "SELECT NOW()" are valid and need no FROM.
+        self.assertEqual(validator.check_sql("SELECT 1;", "en"), [])
+        self.assertEqual(validator.check_sql("SELECT NOW();", "en"), [])
+
+    def test_string_with_parenthesis_not_flagged(self):
+        # A '(' inside a string literal must not count as unbalanced.
+        sql = "SELECT * FROM t WHERE note = 'hi (there)';"
+        self.assertEqual(validator.check_sql(sql, "en"), [])
+
+    def test_azerbaijani_messages(self):
+        issues = validator.check_sql("", "az")
+        self.assertIn("boş", issues[0].lower())
 
 
 if __name__ == "__main__":
