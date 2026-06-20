@@ -15,23 +15,30 @@ available — it upgrades to a Claude-powered engine for richer explanations.
 - **AI engine** — Anthropic Claude for complex queries (subqueries, etc.)
 - **Hybrid auto mode** — picks the AI engine when a key is set, otherwise rules
 - Command-line interface with single-query or file input
+- **Web interface** — a simple Flask page (English/Azerbaijani UI)
 
 ## Project Structure
 
 ```text
 SQL terceme/
 ├── main.py                 # CLI entry point
+├── app.py                  # Flask web interface
 ├── translator.py           # Engine selection (hybrid logic)
 ├── rule_engine.py          # Offline rule-based engine
 ├── ai_engine.py            # Claude API engine
 ├── validator.py            # SQL error detection
+├── templates/
+│   └── index.html          # Web page template
+├── static/
+│   └── style.css           # Web page styling
 ├── prompts/
 │   ├── sql_prompt_en.txt
 │   └── sql_prompt_az.txt
 ├── examples/
 │   └── sample_queries.sql
 ├── tests/
-│   └── test_translator.py
+│   ├── test_translator.py
+│   └── test_web.py
 ├── requirements.txt
 └── README.md
 ```
@@ -143,6 +150,19 @@ GROUP BY department_id;
 For each department_id, show department_id and the number of rows, from employees.
 ```
 
+## Web interface
+
+Start the local server and open it in a browser:
+
+```bash
+python app.py
+# then open http://127.0.0.1:5000/
+```
+
+Enter a SQL query, choose the engine, and switch between English (`EN`) and
+Azerbaijani (`AZ`) in the top-right corner. Validation issues and the
+explanation appear below the form.
+
 ## Running the tests
 
 ```bash
@@ -162,7 +182,6 @@ python -m unittest discover -s tests
 ## Future Enhancements
 
 - Query optimization suggestions
-- Web application interface
 - Interactive learning mode
 
 ## Author

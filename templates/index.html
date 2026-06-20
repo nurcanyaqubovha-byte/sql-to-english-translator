@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ ui.title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <div class="lang-switch">
+        <a href="{{ url_for('index', lang='en') }}" class="{{ 'active' if lang == 'en' }}">EN</a>
+        <a href="{{ url_for('index', lang='az') }}" class="{{ 'active' if lang == 'az' }}">AZ</a>
+      </div>
+      <h1>{{ ui.title }}</h1>
+      <p class="subtitle">{{ ui.subtitle }}</p>
+    </header>
+
+    <p class="engine-note {{ 'ai' if ai_available else 'offline' }}">
+      {{ ui.ai_note if ai_available else ui.rule_note }}
+    </p>
+
+    <form method="post" action="{{ url_for('index') }}">
+      <input type="hidden" name="lang" value="{{ lang }}">
+
+      <label for="query">{{ ui.query_label }}</label>
+      <textarea id="query" name="query" rows="6"
+                placeholder="{{ ui.placeholder }}">{{ query }}</textarea>
+
+      <div class="controls">
+        <label>{{ ui.engine_label }}
+          <select name="engine">
+            {% for e in engines %}
+            <option value="{{ e }}" {{ 'selected' if e == engine }}>{{ e }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">{{ ui.submit }}</button>
+      </div>
+    </form>
+
+    {% if error %}
+    <div class="card error-card">{{ error }}</div>
+    {% endif %}
+
+    {% if issues %}
+    <div class="card issues-card">
+      <h2>{{ ui.issues_title }}</h2>
+      <ul>
+        {% for issue in issues %}
+        <li>{{ issue }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if explanation %}
+    <div class="card result-card">
+      <h2>{{ ui.result_title }}</h2>
+      <p>{{ explanation }}</p>
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>
