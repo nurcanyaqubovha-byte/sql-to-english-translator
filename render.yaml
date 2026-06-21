@@ -1,0 +1,16 @@
+# Render.com Blueprint -- deploys the Flask web app as a public web service.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# gunicorn is installed here (not in requirements.txt) so local Windows users
+# are unaffected; it only runs on Render's Linux servers.
+services:
+  - type: web
+    name: sql-to-english-translator
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt gunicorn"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+    autoDeploy: true
+    # To enable the AI engine in production, add an environment variable named
+    # ANTHROPIC_API_KEY in the Render dashboard. Without it, the app uses the
+    # offline rule-based engine automatically.

@@ -186,6 +186,21 @@ Enter a SQL query, choose the engine, and switch between English (`EN`) and
 Azerbaijani (`AZ`) in the top-right corner. Validation issues and the
 explanation appear below the form.
 
+## Deploy a public link (Render)
+
+The repo includes a `render.yaml` blueprint. To put the app online so anyone can
+use it:
+
+1. Create a free account at <https://render.com> (sign in with GitHub).
+2. New → **Blueprint**, then select this repository.
+3. Render reads `render.yaml`, installs the dependencies, and starts the app
+   with `gunicorn`. You get a public URL like
+   `https://sql-to-english-translator.onrender.com`.
+
+To enable the AI engine in production, add an environment variable
+`ANTHROPIC_API_KEY` in the Render dashboard. Without it, the public site uses
+the offline engine automatically.
+
 ## Running the tests
 
 ```bash
